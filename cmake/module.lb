@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+############################################################################
+#
+#   Copyright (c) 2023 PX4 Development Team. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+# 3. Neither the name PX4 nor the names of its contributors may be
+#    used to endorse or promote products derived from this software
+#    without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+############################################################################
+
+
+def init(module):
+    module.name = ":build"
+    module.description = "Build Settings"
+
+
+def prepare(module, options):
+
+    if options[":platform"] == "posix":
+        module.add_option(
+            BooleanOption(name="lockstep", default=False,
+                          description="Forces lockstep behaviour, despite REPLAY env variable"))
+        module.add_option(
+            BooleanOption(name="nolockstep", default=False,
+                          description="Forces nolockstep behaviour, despite REPLAY env variable"))
+        module.add_option(
+            BooleanOption(name="linux_target", default=False,
+                          description="Board Platform is running the Linux operating system"))
+
+    module.add_option(
+        EnumerationOption(name="toolchain", default="arm-none-eabi",
+                          enumeration=["arm-none-eabi", "qurt", "arm-linux-gnueabihf", "aarch64-linux-gnu"],
+                          description="The compiler prefix triplet"))
+    module.add_option(
+        EnumerationOption(name="architecture", default="cortex-m7",
+                          enumeration=["cortex-a53", "cortex-a8", "cortex-m0plus", "cortex-m3", "cortex-m4", "cortex-m7"],
+                          description="The specific device architecture"))
+    module.add_option(
+        BooleanOption(name="lto", default=False,
+                      description="""Enables LTO flag in linker
+Note: Highly EXPERIMENTAL, furthermore make sure you're using a modern compiler GCC 9 or later"""))
+    module.add_option(
+        EnumerationOption(name="optimization", default="-Og",
+                          enumeration=["-Og", "-O3"],
+                          description="Enables Cmake Release for -O3 optimization"))
+    module.add_option(
+        StringOption(name="romfsroot", default="px4fmu_common",
+                     description="Relative path to the ROMFS root directory"))
+    module.add_option(
+        StringOption(name="io_board_name", default="px4_io-v2_default",
+                     description="Name of IO board to be built and included in the ROMFS (requires a valid ROMFSROOT)"))
+    module.add_option(
+        BooleanOption(name="no_help", default=False,
+                      description="optional condition flag to disable help text on constrained flash systems"))
+    module.add_option(
+        BooleanOption(name="constrained_flash", default=False,
+                      description="Flag to enable constrained flash options (eg limit init script status text)"))
+    module.add_option(
+        BooleanOption(name="constrained_memory", default=False,
+                      description="flag to enable constrained memory options (eg limit maximum number of uORB publications)"))
+    module.add_option(
+        BooleanOption(name="external_metadata", default=False,
+                      description="flag to exclude metadata to reduce flash"))
+
+    module.add_option(
+        StringOption(name="linker_prefix", default="",
+                     description="optional to prefix on the Linker script."))
+
+    module.add_option(
+        StringOption(name="compile_definitions", default="",
+                description="add custom compile defitions to this specific target"))
+
+    module.add_option(
+        BooleanOption(name="testing", default=False,
+                      description="flag to enable automatic inclusion of PX4 testing modules"))
+
+    module.add_option(
+        BooleanOption(name="ethernet", default=False,
+                      description="flag to indicate that ethernet is enabled"))
+
+    module.add_option(
+        BooleanOption(name="crypto", default=False,
+                      description="Enable PX4 Crypto Support. Select the implementation under drivers"))
+
+    module.add_option(
+        BooleanOption(name="protected", default=False,
+                      description="Enable memory protection via MPU/MMU"))
+
+
+
+
+
+    return True
+
+
+def build(env):
+    pass

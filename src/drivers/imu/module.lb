@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+############################################################################
+#
+#   Copyright (c) 2023 PX4 Development Team. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+# 3. Neither the name PX4 nor the names of its contributors may be
+#    used to endorse or promote products derived from this software
+#    without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+############################################################################
+
+with open(localpath("../common.py")) as common:
+    exec(common.read())
+
+
+def init(module):
+    module.name = ":driver:imu"
+    module.description = "Inertial Measurement Unit Drivers"
+
+
+def prepare(module, options):
+    module.add_modules(
+        DefineModule("adis16477", define="DRIVERS_IMU_ADIS16477"),
+        DefineModule("adis16497", define="DRIVERS_IMU_ADIS16497"),
+        DefineModule("adis16448", define="DRIVERS_IMU_ANALOG_DEVICES_ADIS16448"),
+        DefineModule("adis16470", define="DRIVERS_IMU_ANALOG_DEVICES_ADIS16470"),
+        DefineModule("adis16507", define="DRIVERS_IMU_ANALOG_DEVICES_ADIS16507"),
+        DefineModule("bmi055", define="DRIVERS_IMU_BOSCH_BMI055"),
+        DefineModule("bmi085", define="DRIVERS_IMU_BOSCH_BMI085"),
+        DefineModule("bmi088", define="DRIVERS_IMU_BOSCH_BMI088"),
+        DefineModule("bmi088_i2c", define="DRIVERS_IMU_BOSCH_BMI088_I2C"),
+        DefineModule("fxas21002c", define="DRIVERS_IMU_FXAS21002C"),
+        DefineModule("fxos8701cq", define="DRIVERS_IMU_FXOS8701CQ"),
+        DefineModule("icm20602", define="DRIVERS_IMU_INVENSENSE_ICM20602"),
+        DefineModule("icm20608g", define="DRIVERS_IMU_INVENSENSE_ICM20608G"),
+        DefineModule("icm20649", define="DRIVERS_IMU_INVENSENSE_ICM20649"),
+        DefineModule("icm20689", define="DRIVERS_IMU_INVENSENSE_ICM20689"),
+        DefineModule("icm20948", define="DRIVERS_IMU_INVENSENSE_ICM20948"),
+        DefineModule("icm40609d", define="DRIVERS_IMU_INVENSENSE_ICM40609D"),
+        DefineModule("icm42605", define="DRIVERS_IMU_INVENSENSE_ICM42605"),
+        DefineModule("icm42670p", define="DRIVERS_IMU_INVENSENSE_ICM42670P"),
+        DefineModule("icm42688p", define="DRIVERS_IMU_INVENSENSE_ICM42688P"),
+        DefineModule("iim42652", define="DRIVERS_IMU_INVENSENSE_IIM42652"),
+        DefineModule("mpu6000", define="DRIVERS_IMU_INVENSENSE_MPU6000"),
+        DefineModule("mpu6500", define="DRIVERS_IMU_INVENSENSE_MPU6500"),
+        DefineModule("mpu9250", define="DRIVERS_IMU_INVENSENSE_MPU9250"),
+        DefineModule("l3gd20", define="DRIVERS_IMU_L3GD20"),
+        DefineModule("lsm303d", define="DRIVERS_IMU_LSM303D"),
+        DefineModule("lsm9ds1", define="DRIVERS_IMU_ST_LSM9DS1"),
+    )
+    return True
+
+
+def build(env):
+    pass

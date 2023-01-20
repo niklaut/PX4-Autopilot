@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+############################################################################
+#
+#   Copyright (c) 2023 PX4 Development Team. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+# 3. Neither the name PX4 nor the names of its contributors may be
+#    used to endorse or promote products derived from this software
+#    without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+############################################################################
+
+with open(localpath("common.py")) as common:
+    exec(common.read())
+
+
+def init(module):
+    module.name = ":driver"
+    module.description = "Device Drivers"
+
+
+def prepare(module, options):
+    module.add_modules(
+        DefineModule("batt_smbus", define="DRIVERS_BATT_SMBUS"),
+        DefineModule("bootloaders", define="DRIVERS_BOOTLOADERS"),
+        DefineModule("camera_capture", define="DRIVERS_CAMERA_CAPTURE"),
+        DefineModule("camera_trigger", define="DRIVERS_CAMERA_TRIGGER"),
+        DefineModule("heater", define="DRIVERS_HEATER"),
+        DefineModule("irlock", define="DRIVERS_IRLOCK"),
+        DefineModule("pca9685_pwm_out", define="DRIVERS_PCA9685_PWM_OUT"),
+        DefineModule("pps_capture", define="DRIVERS_PPS_CAPTURE"),
+        DefineModule("pwm_input", define="DRIVERS_PWM_INPUT"),
+        DefineModule("pwm_out", define="DRIVERS_PWM_OUT"),
+        DefineModule("spektrum_rc", define="DRIVERS_SPEKTRUM_RC"),
+        DefineModule("rc_input", define="DRIVERS_RC_INPUT"),
+        DefineModule("roboclaw", define="DRIVERS_ROBOCLAW"),
+        DefineModule("rpi_rc_in", define="DRIVERS_RPI_RC_IN"),
+        DefineModule("safety_button", define="DRIVERS_SAFETY_BUTTON"),
+        DefineModule("sw_crypto", define="DRIVERS_SW_CRYPTO"),
+        DefineModule("tap_esc", define="DRIVERS_TAP_ESC"),
+        DefineModule("tattu_can", define="DRIVERS_TATTU_CAN"),
+        DefineModule("test_ppm", define="DRIVERS_TEST_PPM"),
+        DefineModule("tone_alarm", define="DRIVERS_TONE_ALARM"),
+        DefineModule("uavcannode", define="DRIVERS_UAVCANNODE"),
+    )
+    if options[":platform"] == "posix":
+        module.add_modules(
+            DefineModule("linux_pwm_out", define="DRIVERS_LINUX_PWM_OUT"),
+        )
+    return True
+
+
+def build(env):
+    pass
+
+
+"""
+
+"""

@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+############################################################################
+#
+#   Copyright (c) 2023 PX4 Development Team. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+# 3. Neither the name PX4 nor the names of its contributors may be
+#    used to endorse or promote products derived from this software
+#    without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+############################################################################
+
+with open(localpath("../common.py")) as common:
+    exec(common.read())
+
+
+def init(module):
+    module.name = ":driver:distance"
+    module.description = "Distance Sensor Drivers"
+
+
+def prepare(module, options):
+    module.add_modules(
+        DefineModule("AFBRS50", define="DRIVERS_DISTANCE_SENSOR_BROADCOM_AFBRS50"),
+        DefineModule("cm8jl65", define="DRIVERS_DISTANCE_SENSOR_CM8JL65"),
+        DefineModule("GY_US42", define="DRIVERS_DISTANCE_SENSOR_GY_US42"),
+        DefineModule("leddar_one", define="DRIVERS_DISTANCE_SENSOR_LEDDAR_ONE"),
+        DefineModule("lightware_laser_i2c", define="DRIVERS_DISTANCE_SENSOR_LIGHTWARE_LASER_I2C"),
+        DefineModule("lightware_laser_serial", define="DRIVERS_DISTANCE_SENSOR_LIGHTWARE_LASER_SERIAL"),
+        DefineModule("ll40ls", define="DRIVERS_DISTANCE_SENSOR_LL40LS"),
+        DefineModule("ll40ls_pwm", define="DRIVERS_DISTANCE_SENSOR_LL40LS_PWM"),
+        DefineModule("mappydot", define="DRIVERS_DISTANCE_SENSOR_MAPPYDOT"),
+        DefineModule("mb12xx", define="DRIVERS_DISTANCE_SENSOR_MB12XX"),
+        DefineModule("pga460", define="DRIVERS_DISTANCE_SENSOR_PGA460"),
+        DefineModule("srf02", define="DRIVERS_DISTANCE_SENSOR_SRF02"),
+        DefineModule("srf05", define="DRIVERS_DISTANCE_SENSOR_SRF05"),
+        DefineModule("teraranger", define="DRIVERS_DISTANCE_SENSOR_TERARANGER"),
+        DefineModule("tf02pro", define="DRIVERS_DISTANCE_SENSOR_TF02PRO"),
+        DefineModule("tfmini", define="DRIVERS_DISTANCE_SENSOR_TFMINI"),
+        DefineModule("ulanding_radar", define="DRIVERS_DISTANCE_SENSOR_ULANDING_RADAR"),
+        DefineModule("vl53l0x", define="DRIVERS_DISTANCE_SENSOR_VL53L0X"),
+        DefineModule("vl53l1x", define="DRIVERS_DISTANCE_SENSOR_VL53L1X"),
+    )
+    return True
+
+
+def build(env):
+    pass
