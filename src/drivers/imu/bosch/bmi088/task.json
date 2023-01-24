@@ -1,0 +1,42 @@
+{
+  "version": "task-0.1",
+  "extends": "interface-spi",
+  "name": "bmi088",
+  "description": "description.md",
+  "category": "imu",
+  "max-frequency": 1000000,
+  "commands":
+  {
+    "start":
+    {
+      "options":
+      {
+        "spi-internal-bus":
+        {
+          "type": "bool",
+          "description": "Internal bus",
+          "nsh": "s"
+        },
+        "accelerometer":
+        {
+          "type": "bool",
+          "description": "Use sensor in accelerometer mode",
+          "nsh": "A"
+        },
+        "gyroscope":
+        {
+          "type": "bool",
+          "description": "Use sensor in gyroscope mode",
+          "nsh": "G"
+        },
+        "rotation":
+        {
+          "type": "int",
+          "default": 0,
+          "description": "The rotation of the sensor relative to airframe",
+          "nsh": "R"
+        }
+      }
+    }
+  }
+}

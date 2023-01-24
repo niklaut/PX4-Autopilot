@@ -1,0 +1,27 @@
+{
+  "name": "interface-task",
+  "commands":
+  {
+    "start":
+    {
+      "description": "Start a task with optional arguments",
+      "options":
+      {
+        "quiet-startup":
+        {
+          "type": "bool",
+          "description": "Print no message if device not found",
+          "nsh": "q"
+        }
+      }
+    },
+    "stop":
+    {
+      "description": "Stop a task"
+    },
+    "status":
+    {
+      "description": "Print status information"
+    }
+  }
+}

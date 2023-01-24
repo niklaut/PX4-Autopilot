@@ -1,0 +1,32 @@
+{
+  "version": "task-0.1",
+  "name": "fmu-v6x",
+  "interfaces":
+  {
+    "spi1":
+    {
+      "interface": "spi",
+      "tasks":
+      [
+        {
+          "task": "bmi088",
+          "options":
+          {
+            "spi-internal-bus": true,
+            "accelerometer": true,
+            "rotation": 6
+          }
+        },
+        {
+          "task": "bmi088",
+          "options":
+          {
+            "spi-internal-bus": true,
+            "gyroscope": true,
+            "rotation": 6
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "extends": "interface-task",
+  "name": "interface-spi",
+  "interface": "spi",
+  "commands":
+  {
+    "start":
+    {
+      "options":
+      {
+        "spi-frequency":
+        {
+          "type": "int",
+          "description": "Bus frequency in kHz",
+          "nsh": "f"
+        },
+        "spi-internal-bus":
+        {
+          "type": "bool",
+          "description": "Internal bus",
+          "nsh": "s"
+        },
+        "spi-external-bus":
+        {
+          "type": "bool",
+          "description": "External bus",
+          "nsh": "S"
+        },
+        "spi-mode":
+        {
+          "type": "int",
+          "description": "SPI mode",
+          "nsh": "m"
+        },
+        "spi-bus":
+        {
+          "type": "int",
+          "description": "board-specific bus (default=all) (external SPI: n-th bus (default=1))",
+          "nsh": "b"
+        },
+        "spi-chip-select":
+        {
+          "type": "int",
+          "description": "chip-select pin (for internal SPI) or index (for external SPI)",
+          "nsh": "c"
+        }
+      }
+    }
+  }
+}
