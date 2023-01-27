@@ -1,0 +1,15 @@
+/* Copyright (c) 2023 PX4 Development Team
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+&spi3 {
+	/* Using chip select index 1 is correct, not 0! */
+	spi3_imu: icm20649@1 {
+		status = "okay";
+		compatible = "invensense,icm20649-px4";
+		spi-max-frequency = <24000000>;
+		reg = <1>;
+		int-gpios = <&gpiof 2 GPIO_ACTIVE_HIGH>;
+		supply-gpios = <&gpioe 7 GPIO_ACTIVE_HIGH>;
+	};
+};

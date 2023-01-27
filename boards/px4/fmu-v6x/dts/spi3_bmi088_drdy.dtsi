@@ -1,0 +1,12 @@
+/* Copyright (c) 2023 PX4 Development Team
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#include "spi3_bmi088.dtsi"
+
+/* only adds DRDY pin for BMI088 accelerometer */
+&spi3 {
+	&spi3_acc {
+		int-gpios = <&gpioi 6 GPIO_ACTIVE_HIGH>;
+	};
+};

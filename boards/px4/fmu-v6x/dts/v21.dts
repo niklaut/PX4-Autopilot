@@ -1,0 +1,12 @@
+/* Copyright (c) 2023 PX4 Development Team
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+/dts-v1/;
+#include "base.dtsi"
+#include "spi1_icm42649.dtsi"
+#include "spi3_bmi088.dtsi"
+
+/ {
+	version = "V21";
+};

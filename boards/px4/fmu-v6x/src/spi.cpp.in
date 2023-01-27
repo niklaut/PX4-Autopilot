@@ -1,0 +1,31 @@
+/* Copyright (c) 2023 PX4 Development Team
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#include <px4_arch/spi_hw_description.h>
+#include <drivers/drv_sensor.h>
+#include <nuttx/spi/spi.h>
+
+constexpr px4_spi_bus_all_hw_t px4_spi_buses_all_hw[BOARD_NUM_SPI_CFG_HW_VERSIONS] = {
+%% for version in versions | sort(attribute="name")
+	initSPIHWVersion(V{{version.name}}, {
+	%% for bus in version.busses | sort(attribute="name")
+		%% if bus.externals
+		initSPIBusExternal(SPI::Bus::{{bus.name | upper}}, {
+			%% for ext in bus.externals
+			initSPIConfigExternal(SPI::CS{GPIO::Port{{ext.cs.port | upper}}, GPIO::Pin{{ext.cs.pin}}}{% if ext.drdy %}, SPI::DRDY{GPIO::Port{{ext.drdy.port | upper}}, GPIO::Pin{{ext.drdy.pin}}{% endif%}}),
+			%% endfor
+		}),
+		%% else
+		initSPIBus(SPI::Bus::{{bus.name | upper}}, {
+			%% for dev in bus.devices | sort(attribute="name")
+			initSPIDevice({{dev.name | upper}}, SPI::CS{GPIO::Port{{dev.cs.port | upper}}, GPIO::Pin{{dev.cs.pin}}}{% if dev.drdy %}, SPI::DRDY{GPIO::Port{{dev.drdy.port | upper}}, GPIO::Pin{{dev.drdy.pin}}{% endif%}}),
+			%% endfor
+		}{% if bus.supply %}, {GPIO::Port{{bus.supply.port | upper}}, GPIO::Pin{{bus.supply.pin}}}{% endif %}),
+		%% endif
+	%% endfor
+	}),
+%% endfor
+};
+
+static constexpr bool unused = validateSPIConfig(px4_spi_buses_all_hw);

@@ -1,0 +1,91 @@
+/* Copyright (c) 2023 PX4 Development Team
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#include <st/h7/stm32h753Xi.dtsi>
+#include <st/h7/stm32h753iikx-pinctrl.dtsi>
+
+/ {
+	compatible = "px4,fmu-v6x";
+
+	chosen {
+	/*
+		px4,console = &usart3;
+		px4,canbus = &can1;
+	*/
+	};
+};
+
+
+
+&spi1 {
+	status = "okay";
+	pinctrl-0 = <&spi1_sck_pa5 &spi1_miso_pg9 &spi1_mosi_pb5>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpioi 9 GPIO_ACTIVE_LOW>;
+	/* CS is shared, but devices depend on board versions */
+};
+
+&spi2 {
+	status = "okay";
+	pinctrl-0 = <&spi2_sck_pi1 &spi2_miso_pi2 &spi2_mosi_pi3>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpioh 5 GPIO_ACTIVE_LOW>;
+
+	spi2_imu: icm42688@0 {
+		status = "okay";
+		compatible = "invensense,icm42688-px4";
+		spi-max-frequency = <24000000>;
+		reg = <0>;
+		int-gpios = <&gpioa 10 GPIO_ACTIVE_HIGH>;
+		supply-gpios = <&gpiof 4 GPIO_ACTIVE_HIGH>;
+	};
+};
+
+&spi3 {
+	status = "okay";
+	pinctrl-0 = <&spi3_sck_pc10 &spi3_miso_pc11 &spi3_mosi_pb2>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpioi 8 GPIO_ACTIVE_LOW>,
+			   <&gpioi 4 GPIO_ACTIVE_LOW>;
+	/* board versions have different devices connected to this SPI */
+};
+
+&spi5 {
+	status = "okay";
+	pinctrl-0 = <&spi5_sck_pf7 &spi5_miso_ph7 &spi5_mosi_pf11>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpiog 7 GPIO_ACTIVE_LOW>;
+
+	/* generic SPI flash */
+	spi5_flash: flash@0 {
+		compatible = "spi_flash-px4";
+		spi-max-frequency = <10000000>;
+		reg = <0>;
+	};
+};
+
+external_spi: &spi6 {
+	status = "okay";
+	pinctrl-0 = <&spi6_sck_pb3 &spi6_miso_pa6 &spi6_mosi_pg14>;
+	pinctrl-names = "default";
+	/* external SPI only has chip select pins defined */
+	cs-gpios = <&gpioi 10 GPIO_ACTIVE_LOW>,
+			   <&gpioa 15 GPIO_ACTIVE_LOW>;
+	/* the data ready pins must be defined by the overlay
+	int-gpios = <&gpiod 11 GPIO_ACTIVE_LOW>,
+				<&gpiod 12 GPIO_ACTIVE_LOW>; */
+};
+
+
+/* UNUSED and IGNORED, defined only for compatibility with dts bindings */
+&rcc {
+	clocks = <&pll>;
+	clock-frequency = <DT_FREQ_M(400)>;
+	d1cpre = <1>;
+	hpre = <1>;
+	d1ppre = <1>;
+	d2ppre1 = <1>;
+	d2ppre2 = <1>;
+	d3ppre = <1>;
+};

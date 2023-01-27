@@ -1,0 +1,8 @@
+# Copyright (c) 2023 PX4 Development Team
+# SPDX-License-Identifier: Apache-2.0
+
+description: Generic SPI Flash
+
+compatible: "spi_flash-px4"
+
+include: [spi-device.yaml]

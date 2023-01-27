@@ -1,0 +1,25 @@
+/* Copyright (c) 2023 PX4 Development Team
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+/* lacks the DRDY pin for BMI088 accelerometer */
+&spi3 {
+	cs-gpios = <&gpioi 8 GPIO_ACTIVE_LOW>,
+			   <&gpioi 4 GPIO_ACTIVE_LOW>;
+
+	spi3_gyr: bmi088_gyr@0 {
+		status = "okay";
+		compatible = "bosch,bmi088_gyr-px4";
+		spi-max-frequency = <10000000>;
+		reg = <0>;
+		int-gpios = <&gpioi 7 GPIO_ACTIVE_HIGH>;
+		supply-gpios = <&gpioe 7 GPIO_ACTIVE_HIGH>;
+	};
+	spi3_acc: bmi088_acc@1 {
+		status = "okay";
+		compatible = "bosch,bmi088_acc-px4";
+		spi-max-frequency = <10000000>;
+		reg = <1>;
+		supply-gpios = <&gpioe 7 GPIO_ACTIVE_HIGH>;
+	};
+};
