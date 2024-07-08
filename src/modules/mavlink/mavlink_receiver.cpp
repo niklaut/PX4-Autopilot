@@ -2878,6 +2878,19 @@ void MavlinkReceiver::handle_message_generator_status(mavlink_message_t *msg)
 
 void MavlinkReceiver::handle_message_statustext(mavlink_message_t *msg)
 {
+	if (msg->sysid == 255) { // GCS, only for pilot login message
+		mavlink_statustext_t statustext;
+		mavlink_msg_statustext_decode(msg, &statustext);
+
+		log_message_s log_msg;
+		log_msg.timestamp = hrt_absolute_time();
+		log_msg.severity = statustext.severity;
+		memcpy(log_msg.text, statustext.text, math::min(sizeof(log_msg.text), sizeof(statustext.text)));
+		log_msg.text[sizeof(log_msg.text) - 1] = '\0';
+
+		_log_message_incoming_pub.publish(log_msg);
+	}
+
 	if (msg->sysid == mavlink_system.sysid) {
 		// log message from the same system
 

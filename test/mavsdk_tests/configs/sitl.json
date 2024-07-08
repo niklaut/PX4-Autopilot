@@ -14,7 +14,8 @@
             "model": "iris",
             "vehicle": "iris",
             "test_filter": "[offboard_attitude]",
-            "timeout_min": 10
+            "timeout_min": 10,
+            "__comment": "Auterion: The test with \"SYS_MC_EST_GROUP\": 3 is disabled because COM_ARM_WO_GPS is 0 by default"
         },
         {
             "model": "standard_vtol",

@@ -148,7 +148,7 @@ parameters:
         6: Max vertical position rate (EKF2_REQ_VDRIFT)
         7: Max horizontal speed (EKF2_REQ_HDRIFT)
         8: Max vertical velocity discrepancy (EKF2_REQ_VDRIFT)
-      default: 245
+      default: 255
       min: 0
       max: 511
     EKF2_REQ_EPH:
