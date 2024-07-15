@@ -101,7 +101,8 @@ void LoggedTopics::add_default_topics()
 	add_topic("goto_setpoint", 200);
 	add_optional_topic("px4io_status");
 	add_topic("radio_status");
-	add_topic("rover_ackermann_guidance_status", 100);
+	add_optional_topic("rover_ackermann_guidance_status", 100);
+	add_optional_topic("rover_ackermann_status", 100);
 	add_topic("rtl_time_estimate", 1000);
 	add_topic("rtl_status", 2000);
 	add_optional_topic("sensor_airflow", 100);
