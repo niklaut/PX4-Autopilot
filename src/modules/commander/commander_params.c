@@ -231,7 +231,7 @@ PARAM_DEFINE_FLOAT(COM_DISARM_PRFLT, 10.0f);
  * @value 0 Require GPS lock to arm
  * @value 1 Allow arming without GPS
  */
-PARAM_DEFINE_INT32(COM_ARM_WO_GPS, 1);
+PARAM_DEFINE_INT32(COM_ARM_WO_GPS, 0); // Auterion flavor
 
 /**
  * Arm switch is a momentary button
@@ -844,6 +844,23 @@ PARAM_DEFINE_INT32(COM_POWER_COUNT, 1);
  * @decimal 3
  */
 PARAM_DEFINE_FLOAT(COM_LKDOWN_TKO, 3.0f);
+
+// Auterion flavor
+/**
+ * Enable external components update
+ *
+ * If enabled, the check will verify that the external components (e.g. ESCs, Smartbattery,...) have been successfully updated.
+ * The check looks for the "ext_component_updated" file on the SD card and parses it.
+ * The file can contain a "SUCCESS <return_code>" or "FAIL <error_code>", depending on the parsed result the system will
+ * allow/deny arming.
+ *
+ * @group Commander
+ * @value 0 Disabled
+ * @value 1 Enabled
+ * @value 2 Trigger fake success (update_checker)
+ * @value 3 Trigger fake fail (update_checker)
+ */
+PARAM_DEFINE_INT32(COM_EXT_COMP_EN, 0);
 
 /**
  * Enable FMU SD card detection check
