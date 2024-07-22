@@ -37,7 +37,7 @@ float32 aux6
 
 bool sticks_moving
 
-uint16 buttons		# From uint16 buttons field of Mavlink manual_control message
+# uint16 buttons		# From uint16 buttons field of Mavlink manual_control message
 
 # TOPICS manual_control_setpoint manual_control_input
 # DEPRECATED: float32 x
