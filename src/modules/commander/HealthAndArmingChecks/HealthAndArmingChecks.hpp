@@ -193,4 +193,3 @@ private:
 		&_vtol_checks,
 	};
 };
-

@@ -104,9 +104,6 @@ public:
 	float getTerrainVertPos() const { return _state.terrain; };
 	float getHagl() const { return _state.terrain - _state.pos(2); }
 
-	// get the number of times the vertical terrain position has been reset
-	uint8_t getTerrainVertPosResetCounter() const { return _terrain_vpos_reset_counter; };
-
 	// get the terrain variance
 	float getTerrainVariance() const { return P(State::terrain.idx, State::terrain.idx); }
 
@@ -147,7 +144,7 @@ public:
 
 #if defined(CONFIG_EKF2_GNSS_YAW)
 
-		if (_control_status.flags.gps_yaw) {
+		if (_control_status.flags.gnss_yaw) {
 			return _aid_src_gnss_yaw.innovation;
 		}
 
@@ -176,7 +173,7 @@ public:
 
 #if defined(CONFIG_EKF2_GNSS_YAW)
 
-		if (_control_status.flags.gps_yaw) {
+		if (_control_status.flags.gnss_yaw) {
 			return _aid_src_gnss_yaw.innovation_variance;
 		}
 
@@ -205,7 +202,7 @@ public:
 
 #if defined(CONFIG_EKF2_GNSS_YAW)
 
-		if (_control_status.flags.gps_yaw) {
+		if (_control_status.flags.gnss_yaw) {
 			return _aid_src_gnss_yaw.test_ratio;
 		}
 
@@ -358,6 +355,13 @@ public:
 		*counter = _state_reset_status.reset_count.posD;
 	}
 
+	uint8_t get_hagl_reset_count() const { return _state_reset_status.reset_count.hagl; }
+	void get_hagl_reset(float *delta, uint8_t *counter) const
+	{
+		*delta = _state_reset_status.hagl_change;
+		*counter = _state_reset_status.reset_count.hagl;
+	}
+
 	// return the amount the local vertical velocity changed in the last reset and the number of reset events
 	uint8_t get_velD_reset_count() const { return _state_reset_status.reset_count.velD; }
 	void get_velD_reset(float *delta, uint8_t *counter) const
@@ -392,7 +396,8 @@ public:
 
 	float getHeadingInnovationTestRatio() const;
 
-	float getVelocityInnovationTestRatio() const;
+	float getHorizontalVelocityInnovationTestRatio() const;
+	float getVerticalVelocityInnovationTestRatio() const;
 
 	float getHorizontalPositionInnovationTestRatio() const;
 	float getVerticalPositionInnovationTestRatio() const;
@@ -403,7 +408,7 @@ public:
 	float getHeightAboveGroundInnovationTestRatio() const;
 
 	// return a bitmask integer that describes which state estimates are valid
-	void get_ekf_soln_status(uint16_t *status) const;
+	uint16_t get_ekf_soln_status() const;
 
 	HeightSensor getHeightSensorRef() const { return _height_sensor_ref; }
 
@@ -521,6 +526,18 @@ public:
 	bool resetGlobalPosToExternalObservation(double lat_deg, double lon_deg, float accuracy,
 			uint64_t timestamp_observation);
 
+	/**
+	* @brief Resets the wind states to an external observation
+	*
+	* @param wind_speed The wind speed in m/s
+	* @param wind_direction The azimuth (from true north) to where the wind is heading in radians
+	* @param wind_speed_accuracy The 1 sigma accuracy of the wind speed estimate in m/s
+	* @param wind_direction_accuracy The 1 sigma accuracy of the wind direction estimate in radians
+	*/
+	void resetWindToExternalObservation(float wind_speed, float wind_direction, float wind_speed_accuracy,
+					    float wind_direction_accuracy);
+	bool _external_wind_init{false};
+
 	void updateParameters();
 
 	friend class AuxGlobalPosition;
@@ -551,6 +568,7 @@ private:
 		uint8_t posNE{0};	///< number of horizontal position reset events (allow to wrap if count exceeds 255)
 		uint8_t posD{0};	///< number of vertical position reset events (allow to wrap if count exceeds 255)
 		uint8_t quat{0};	///< number of quaternion reset events (allow to wrap if count exceeds 255)
+		uint8_t hagl{0};	///< number of height above ground level reset events (allow to wrap if count exceeds 255)
 	};
 
 	struct StateResets {
@@ -559,6 +577,7 @@ private:
 		Vector2f posNE_change;	///< North, East position change due to last reset (m)
 		float posD_change;	///< Down position change due to last reset (m)
 		Quatf quat_change;	///< quaternion delta due to last reset - multiply pre-reset quaternion by this to get post-reset quaternion
+		float hagl_change;	///< Height above ground level change due to last reset (m)
 
 		StateResetCounts reset_count{};
 	};
@@ -579,6 +598,7 @@ private:
 	uint64_t _time_last_hor_vel_fuse{0};	///< time the last fusion of horizontal velocity measurements was performed (uSec)
 	uint64_t _time_last_ver_vel_fuse{0};	///< time the last fusion of verticalvelocity measurements was performed (uSec)
 	uint64_t _time_last_heading_fuse{0};
+	uint64_t _time_last_terrain_fuse{0};
 
 	Vector3f _last_known_pos{};		///< last known local position vector (m)
 
@@ -599,8 +619,6 @@ private:
 
 #if defined(CONFIG_EKF2_TERRAIN)
 	// Terrain height state estimation
-	uint8_t _terrain_vpos_reset_counter{0};	///< number of times _terrain_vpos has been reset
-
 	float _last_on_ground_posD{0.0f};	///< last vertical position when the in_air status was false (m)
 #endif // CONFIG_EKF2_TERRAIN
 
@@ -648,7 +666,7 @@ private:
 	Vector3f _gps_pos_deriv_filt{};	///< GPS NED position derivative (m/sec)
 	Vector2f _gps_velNE_filt{};	///< filtered GPS North and East velocity (m/sec)
 
-	float _gps_velD_diff_filt{0.0f};	///< GPS filtered Down velocity (m/sec)
+	float _gps_vel_d_filt{0.0f};		///< GNSS filtered Down velocity (m/sec)
 	uint64_t _last_gps_fail_us{0};		///< last system time in usec that the GPS failed it's checks
 	uint64_t _last_gps_pass_us{0};		///< last system time in usec that the GPS passed it's checks
 	uint32_t _min_gps_health_time_us{10000000}; ///< GPS is marked as healthy only after this amount of time
@@ -776,7 +794,7 @@ private:
 
 	// fuse synthetic zero sideslip measurement
 	void updateSideslip(estimator_aid_source1d_s &_aid_src_sideslip) const;
-	void fuseSideslip(estimator_aid_source1d_s &_aid_src_sideslip);
+	bool fuseSideslip(estimator_aid_source1d_s &_aid_src_sideslip);
 #endif // CONFIG_EKF2_SIDESLIP
 
 #if defined(CONFIG_EKF2_DRAG_FUSION)
@@ -801,6 +819,8 @@ private:
 
 	void resetHorizontalPositionTo(const Vector2f &new_horz_pos, const Vector2f &new_horz_pos_var);
 	void resetHorizontalPositionTo(const Vector2f &new_horz_pos, const float pos_var = NAN) { resetHorizontalPositionTo(new_horz_pos, Vector2f(pos_var, pos_var)); }
+
+	void resetWindTo(const Vector2f &wind, const Vector2f &wind_var);
 
 	bool isHeightResetRequired() const;
 
@@ -991,17 +1011,17 @@ private:
 	void resetGpsDriftCheckFilters();
 
 # if defined(CONFIG_EKF2_GNSS_YAW)
-	void controlGpsYawFusion(const gnssSample &gps_sample);
-	void stopGpsYawFusion();
+	void controlGnssYawFusion(const gnssSample &gps_sample);
+	void stopGnssYawFusion();
 
 	// fuse the yaw angle obtained from a dual antenna GPS unit
-	void fuseGpsYaw(float antenna_yaw_offset);
+	void fuseGnssYaw(float antenna_yaw_offset);
 
 	// reset the quaternions states using the yaw angle obtained from a dual antenna GPS unit
 	// return true if the reset was successful
-	bool resetYawToGps(float gnss_yaw, float gnss_yaw_offset);
+	bool resetYawToGnss(float gnss_yaw, float gnss_yaw_offset);
 
-	void updateGpsYaw(const gnssSample &gps_sample);
+	void updateGnssYaw(const gnssSample &gps_sample);
 
 # endif // CONFIG_EKF2_GNSS_YAW
 
@@ -1089,8 +1109,6 @@ private:
 #endif // CONFIG_EKF2_MAGNETOMETER
 
 #if defined(CONFIG_EKF2_WIND)
-	// perform a reset of the wind states and related covariances
-	void resetWind();
 	void resetWindCov();
 	void resetWindToZero();
 #endif // CONFIG_EKF2_WIND
