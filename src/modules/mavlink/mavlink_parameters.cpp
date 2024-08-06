@@ -125,7 +125,8 @@ MavlinkParametersManager::handle_message(const mavlink_message_t *msg)
 				if (strcmp(name, "RTL_RETURN_ALT") != 0 &&
 				    strcmp(name, "GF_ACTION") != 0 &&
 				    strcmp(name, "GF_MAX_HOR_DIST") != 0 &&
-				    strcmp(name, "GF_MAX_VER_DIST") != 0) {
+				    strcmp(name, "GF_MAX_VER_DIST") != 0 &&
+				    strcmp(name, "MAV_SYS_ID") != 0) {
 					return;
 				}
 
