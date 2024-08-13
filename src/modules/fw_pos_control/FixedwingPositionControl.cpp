@@ -1532,8 +1532,6 @@ FixedwingPositionControl::control_auto_takeoff(const hrt_abstime &now, const flo
 		_att_sp.pitch_body = _runway_takeoff.getPitch(get_tecs_pitch());
 		_att_sp.thrust_body[0] = _runway_takeoff.getThrottle(_param_fw_thr_idle.get(), get_tecs_thrust());
 
-		_flaps_setpoint = _param_fw_flaps_to_scl.get();
-
 		// retract ladning gear once passed the climbout state
 		if (_runway_takeoff.getState() > RunwayTakeoffState::CLIMBOUT) {
 			_new_landing_gear_position = landing_gear_s::GEAR_UP;
@@ -1634,6 +1632,7 @@ FixedwingPositionControl::control_auto_takeoff(const hrt_abstime &now, const flo
 		_launch_detection_status_pub.publish(launch_detection_status);
 	}
 
+	_flaps_setpoint = _param_fw_flaps_to_scl.get();
 	_att_sp.roll_body = constrainRollNearGround(_att_sp.roll_body, _current_altitude, _takeoff_ground_alt);
 
 	if (!_vehicle_status.in_transition_to_fw) {
@@ -2159,28 +2158,25 @@ FixedwingPositionControl::control_manual_position(const float control_interval, 
 
 		if (_yaw_lock_engaged) {
 
-			/* just switched back from non heading-hold to heading hold */
+			Vector2f curr_pos_local{_local_pos.x, _local_pos.y};
+
 			if (!_hdg_hold_enabled) {
+				// just switched back from non heading-hold to heading hold
 				_hdg_hold_enabled = true;
 				_hdg_hold_yaw = _yaw;
 
-				_hdg_hold_position.lat = _current_latitude;
-				_hdg_hold_position.lon = _current_longitude;
+				_hdg_hold_position = curr_pos_local;
 			}
 
 			// if there's a reset-by-fusion, the ekf needs some time to converge,
 			// therefore we go into track holiding for 2 seconds
 			if (_local_pos.timestamp - _time_last_xy_reset < 2_s) {
-				_hdg_hold_position.lat = _current_latitude;
-				_hdg_hold_position.lon = _current_longitude;
+				_hdg_hold_position = curr_pos_local;
 			}
-
-			Vector2f curr_pos_local{_local_pos.x, _local_pos.y};
-			Vector2f curr_wp_local = _global_local_proj_ref.project(_hdg_hold_position.lat, _hdg_hold_position.lon);
 
 			_npfg.setAirspeedNom(calibrated_airspeed_sp * _eas2tas);
 			_npfg.setAirspeedMax(_performance_model.getMaximumCalibratedAirspeed() * _eas2tas);
-			navigateLine(curr_wp_local, _hdg_hold_yaw, curr_pos_local, ground_speed, _wind_vel);
+			navigateLine(_hdg_hold_position, _hdg_hold_yaw, curr_pos_local, ground_speed, _wind_vel);
 			_att_sp.roll_body = getCorrectedNpfgRollSetpoint();
 			calibrated_airspeed_sp = _npfg.getAirspeedRef() / _eas2tas;
 
