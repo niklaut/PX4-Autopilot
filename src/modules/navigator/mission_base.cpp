@@ -65,6 +65,8 @@ MissionBase::MissionBase(Navigator *navigator, int32_t dataman_cache_size_signed
 	_mission.geofence_id = 0;
 	_mission.safe_points_id = 0;
 
+	_old_mission = _mission;
+
 	_mission_pub.advertise();
 }
 
@@ -100,6 +102,11 @@ void MissionBase::updateMavlinkMission()
 		if (new_mission.current_seq < 0) {
 			new_mission.current_seq = math::constrain(_mission.current_seq, INT32_C(0),
 						  static_cast<int32_t>(new_mission.count) - 1);
+		}
+
+		if (mission_items_changed) {
+			_old_mission = _mission;
+			_old_mission_valid = _navigator->get_mission_result()->valid;
 		}
 
 		if (new_mission.geofence_id != _mission.geofence_id) {
@@ -719,11 +726,73 @@ MissionBase::check_mission_valid(bool forced)
 
 		set_mission_result();
 
-		// only warn if the check failed on merit
-		if ((!_navigator->get_mission_result()->valid) && _mission.count > 0U) {
-			PX4_WARN("mission check failed");
-		}
+		if ((!_navigator->get_mission_result()->valid) && ((_mission.count > 0U)
+				|| ((_vehicle_status_sub.get().arming_state == vehicle_status_s::ARMING_STATE_ARMED)
+				    && ((_vehicle_status_sub.get().is_vtol)
+					|| (_vehicle_status_sub.get().vehicle_type == vehicle_status_s::VEHICLE_TYPE_FIXED_WING))))) {
+			// Try to restore the previous mission
+			const mission_s new_mission = _mission;
+			bool mission_write_failed = false;
 
+			if (_vehicle_status_sub.get().arming_state == vehicle_status_s::ARMING_STATE_ARMED) {
+				// If armed, do not check for mission validity again, but use the previous result
+				if (_old_mission_valid) {
+					_mission = _old_mission;
+					_navigator->get_mission_result()->valid = true;
+					_navigator->get_mission_result()->mission_id = _mission.mission_id;
+					_navigator->get_mission_result()->seq_total = _mission.count;
+					_navigator->get_mission_result()->seq_reached = -1;
+					_navigator->get_mission_result()->failure = false;
+					set_mission_result();
+				}
+
+			} else {
+				bool valid = missionFeasibilityChecker.checkMissionFeasible(_old_mission);
+
+				if (valid) {
+					_mission = _old_mission;
+					_navigator->get_mission_result()->valid = true;
+					_navigator->get_mission_result()->mission_id = _mission.mission_id;
+					_navigator->get_mission_result()->seq_total = _mission.count;
+					_navigator->get_mission_result()->seq_reached = -1;
+					_navigator->get_mission_result()->failure = false;
+					set_mission_result();
+				}
+			}
+
+			if (_navigator->get_mission_result()->valid) {
+				/* For completed old mission reset sequence to the first item. */
+				if (_mission.current_seq >= _mission.count) {
+					_mission.current_seq = 0;
+				}
+
+				const bool success = _dataman_client.writeSync(DM_KEY_MISSION_STATE, 0, reinterpret_cast<uint8_t *>(&_mission),
+						     sizeof(mission_s));
+
+				if (!success) {
+					mission_write_failed = true;
+				}
+
+			} else {
+				// only warn if the check failed on merit
+				PX4_WARN("mission check failed");
+				mission_write_failed = true;
+			}
+
+			if (mission_write_failed) {
+				_mission = new_mission;
+
+			} else {
+				// Publish potentially updated mission state
+				_mission.timestamp = hrt_absolute_time();
+				_mission_pub.publish(_mission);
+
+				// Notify user
+				mavlink_log_warning(_navigator->get_mavlink_log_pub(), "Invalid Mission: Previous mission has been restored\t");
+				events::send(events::ID("old_mission_restored"), events::Log::Warning,
+					     "Invalid Mission: Previous mission has been restored");
+			}
+		}
 	}
 }
 

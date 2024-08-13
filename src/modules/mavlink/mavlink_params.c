@@ -154,4 +154,17 @@ PARAM_DEFINE_INT32(MAV_HB_FORW_EN, 1);
  * @min 1
  * @max 250
  */
-PARAM_DEFINE_INT32(MAV_RADIO_TOUT, 5);
+PARAM_DEFINE_INT32(MAV_RADIO_TOUT, 25);  //Auterion flavor
+
+
+// Auterion flavor
+/**
+ * Enable MAVLink forwarding on TELEM2
+ *
+ * TELEM2 on Skynode only.
+ *
+ * @boolean
+ * @group MAVLink
+ * @reboot_required true
+ */
+PARAM_DEFINE_INT32(MAV_S_FORWARD, 0);

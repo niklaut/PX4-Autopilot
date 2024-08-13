@@ -3,7 +3,8 @@ name: Nuttx Target with extra env config
 on:
   push:
     branches:
-    - 'main'
+    - 'develop'
+    - 'release/*'
   pull_request:
     branches:
     - '*'
@@ -15,7 +16,8 @@ jobs:
     strategy:
       matrix:
         config: [
-          px4_fmu-v5,
+          px4_fmu-v5x,
+          px4_fmu-v6x
           ]
     steps:
     - uses: actions/checkout@v1
