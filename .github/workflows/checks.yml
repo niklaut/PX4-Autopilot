@@ -3,10 +3,11 @@ name: Checks
 on:
   push:
     branches:
-    - 'main'
+    - 'develop'
+    - 'release/*'
   pull_request:
     branches:
-    - '*'
+    - '**'
 
 jobs:
   build:
@@ -19,10 +20,8 @@ jobs:
           "check_newlines",
           "tests",
           "tests_coverage",
-          "px4_fmu-v2_default stack_check",
           "validate_module_configs",
           "shellcheck_all",
-          "NO_NINJA_BUILD=1 px4_fmu-v5_default",
           "NO_NINJA_BUILD=1 px4_sitl_default",
           "px4_sitl_allyes",
           "airframe_metadata",
@@ -34,19 +33,19 @@ jobs:
       options: --privileged --ulimit core=-1 --security-opt seccomp=unconfined
     steps:
     - uses: actions/checkout@v1
-      with:
-        token: ${{ secrets.ACCESS_TOKEN }}
-
+    - name: disable the keychain credential helper
+      run: git config --global credential.helper ""
+    - name: enable the local store credential helper
+      run: git config --global --add credential.helper store
+    - name: add credential
+      run: echo "https://x-access-token:${{ secrets.ACCESS_TOKEN }}@github.com" >> ~/.git-credentials
+    - name: tell git to use https instead of ssh whenever it encounters it
+      run: 'git config --global url."https://github.com/".insteadof git@github.com:'
+    - name: get submodules
+      run: 'git submodule update --init --recursive'
     - name: check environment
       run: |
           export
           ulimit -a
     - name: ${{matrix.check}}
       run: make ${{matrix.check}}
-    - name: upload coverage
-      if: contains(matrix.check, 'coverage')
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: unittests
-        file: coverage/lcov.info

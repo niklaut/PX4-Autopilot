@@ -129,7 +129,10 @@ else
 	BUILD_DIR_SUFFIX :=
 endif
 
-CMAKE_ARGS ?=
+ifdef PX4_RESTRICTED_BUILD
+	CMAKE_ARGS += -DPX4_RESTRICTED_BUILD=ON
+	BUILD_DIR_SUFFIX := $(BUILD_DIR_SUFFIX)_restricted
+endif
 
 # additional config parameters passed to cmake
 ifdef EXTERNAL_MODULES_LOCATION
