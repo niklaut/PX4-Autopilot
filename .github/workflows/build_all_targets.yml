@@ -36,7 +36,7 @@ jobs:
           path: "./Tools/setup/requirements.txt"
 
       - id: set-matrix
-        run: echo "::set-output name=matrix::$(cat ./Tools/auterion_board_config.json)"
+        run: echo "::set-output name=matrix::$(jq -rcM . ./Tools/auterion_board_config.json)"
 
       - id: set-timestamp
         run: echo "::set-output name=timestamp::$(date +"%Y%m%d%H%M%S")"
