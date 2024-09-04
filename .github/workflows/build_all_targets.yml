@@ -17,6 +17,9 @@ on:
     branches:
     - '**'
 
+env:
+  AUTERION_BOARDS: 'px4_fmu-v5x,px4_fmu-v6x'
+
 jobs:
   group_targets:
     name: Scan for Board Targets
@@ -36,7 +39,7 @@ jobs:
           path: "./Tools/setup/requirements.txt"
 
       - id: set-matrix
-        run: echo "::set-output name=matrix::$(jq -rcM . ./Tools/auterion_board_config.json)"
+        run: echo "::set-output name=matrix::$(./Tools/generate_board_targets_json.py --groups --filter ${{env.AUTERION_BOARDS}})"
 
       - id: set-timestamp
         run: echo "::set-output name=timestamp::$(date +"%Y%m%d%H%M%S")"
