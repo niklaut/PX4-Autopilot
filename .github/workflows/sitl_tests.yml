@@ -9,14 +9,17 @@ on:
   push:
     branches:
     - 'main'
+    - 'develop'
+    - 'release/*'
   pull_request:
     branches:
-    - '*'
+    - '**'
 
 jobs:
   build:
     name: Testing PX4 ${{ matrix.config.model }}
-    runs-on: [runs-on,runner=16cpu-linux-x64,image=ubuntu22-full-x64,"run-id=${{ github.run_id }}"]
+    runs-on: ubuntu-latest
+    #runs-on: [runs-on,runner=16cpu-linux-x64,image=ubuntu22-full-x64,"run-id=${{ github.run_id }}"]
     container:
       image: px4io/px4-dev-simulation-focal:2021-09-08
       options: --privileged --ulimit core=-1 --security-opt seccomp=unconfined
@@ -26,12 +29,14 @@ jobs:
         config:
           - {model: "iris",          latitude:  "59.617693", longitude: "-151.145316", altitude:  "48", build_type: "RelWithDebInfo" } # Alaska
           - {model: "tailsitter" ,   latitude:  "29.660316", longitude:  "-82.316658", altitude:  "30", build_type: "RelWithDebInfo" } # Florida
-          - {model: "standard_vtol", latitude:  "47.397742", longitude:    "8.545594", altitude: "488", build_type: "Coverage" } # Zurich
+          - {model: "standard_vtol", latitude:  "47.397742", longitude:    "8.545594", altitude: "488", build_type: "RelWithDebInfo" } # Zurich
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.AUTERION_CI_ACCESS_TOKEN }}
+          submodules: recursive
 
       - name: Git Ownership Workaround
         run: git config --system --add safe.directory '*'
