@@ -86,7 +86,7 @@ jobs:
         env:
           PX4_RESTRICTED_BUILD: 1
         run: |
-        ./Tools/ci_build_all_runner.sh ${{matrix.targets}}
+            ./Tools/ci_build_all_runner.sh ${{matrix.targets}}
 
       - name: Upload px4 package
         uses: actions/upload-artifact@v4
