@@ -93,7 +93,7 @@ if [ "$GPS" != "NONE" ]; then
 fi
 
 # Auto detect an ncp5623c i2c RGB LED. If one isn't connected this will
-# fail but not cause any harm. 
+# fail but not cause any harm.
 /bin/echo "Looking for ncp5623c RGB LED"
 qshell rgbled_ncp5623c start -X -b 1 -f 400 -a 56
 
@@ -147,16 +147,16 @@ elif [ "$RC" == "M0065_SBUS" ]; then
 	if [ $PLATFORM = "M0052" ]; then
 		apps_sbus start
 	elif [ "$ESC" != "VOXL2_IO_PWM_ESC" ]; then
-    	/bin/echo "Attempting to start M0065 SBUS RC driver for original M0065 FW"
-    	qshell dsp_sbus start
+	/bin/echo "Attempting to start M0065 SBUS RC driver for original M0065 FW"
+	qshell dsp_sbus start
 		retVal=$?
 		if [ $retVal -ne 0 ]; then
-	    	/bin/echo "Starting M0065 SBUS RC driver for original M0065 FW failed"
-	    	/bin/echo "Attempting to start M0065 SBUS RC driver for new M0065 FW"
+		/bin/echo "Starting M0065 SBUS RC driver for original M0065 FW failed"
+		/bin/echo "Attempting to start M0065 SBUS RC driver for new M0065 FW"
 			qshell voxl2_io start -d -p 7
 		fi
 	else
-    	/bin/echo "M0065 SBUS RC driver already started with PWM ESC start"
+	/bin/echo "M0065 SBUS RC driver already started with PWM ESC start"
 	fi
 fi
 
