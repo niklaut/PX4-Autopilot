@@ -773,41 +773,28 @@ MissionBase::check_mission_valid(bool forced)
 
 		set_mission_result();
 
+		// Try to restore previous mission if current mission is invalid and has some mission items. Also on a armed fixed wing vehicle
+		// do not accept an empty mission if a prior valid mission is available to avoid having no proper landing anymore.
 		if ((!_navigator->get_mission_result()->valid) && ((_mission.count > 0U)
 				|| ((_vehicle_status_sub.get().arming_state == vehicle_status_s::ARMING_STATE_ARMED)
-				    && ((_vehicle_status_sub.get().is_vtol)
-					|| (_vehicle_status_sub.get().vehicle_type == vehicle_status_s::VEHICLE_TYPE_FIXED_WING))))) {
+				    && (_vehicle_status_sub.get().vehicle_type == vehicle_status_s::VEHICLE_TYPE_FIXED_WING)))) {
 			// Try to restore the previous mission
 			const mission_s new_mission = _mission;
 			bool mission_write_failed = false;
+			bool old_mission_valid = false;
 
 			if (_vehicle_status_sub.get().arming_state == vehicle_status_s::ARMING_STATE_ARMED) {
 				// If armed, do not check for mission validity again, but use the previous result
-				if (_old_mission_valid) {
-					_mission = _old_mission;
-					_navigator->get_mission_result()->valid = true;
-					_navigator->get_mission_result()->mission_id = _mission.mission_id;
-					_navigator->get_mission_result()->seq_total = _mission.count;
-					_navigator->get_mission_result()->seq_reached = -1;
-					_navigator->get_mission_result()->failure = false;
-					set_mission_result();
-				}
+				old_mission_valid = _old_mission_valid;
 
 			} else {
-				bool valid = missionFeasibilityChecker.checkMissionFeasible(_old_mission);
+				old_mission_valid = missionFeasibilityChecker.checkMissionFeasible(_old_mission);
 
-				if (valid) {
-					_mission = _old_mission;
-					_navigator->get_mission_result()->valid = true;
-					_navigator->get_mission_result()->mission_id = _mission.mission_id;
-					_navigator->get_mission_result()->seq_total = _mission.count;
-					_navigator->get_mission_result()->seq_reached = -1;
-					_navigator->get_mission_result()->failure = false;
-					set_mission_result();
-				}
 			}
 
-			if (_navigator->get_mission_result()->valid) {
+			if (old_mission_valid) {
+				_mission = _old_mission;
+
 				/* For completed old mission reset sequence to the first item. */
 				if (_mission.current_seq >= _mission.count) {
 					_mission.current_seq = 0;
@@ -818,26 +805,43 @@ MissionBase::check_mission_valid(bool forced)
 
 				if (!success) {
 					mission_write_failed = true;
+
+				} else {
+					// Notify user
+					mavlink_log_warning(_navigator->get_mavlink_log_pub(), "Invalid Mission: Previous mission has been restored\t");
+					events::send(events::ID("old_mission_restored"), events::Log::Warning,
+						     "Invalid Mission: Previous mission has been restored");
+					// Publish potentially updated mission state
+					_mission.timestamp = hrt_absolute_time();
+					_mission_pub.publish(_mission);
+					_navigator->get_mission_result()->valid = true;
 				}
 
 			} else {
-				// only warn if the check failed on merit
-				PX4_WARN("mission check failed");
-				mission_write_failed = true;
+				// Reset the mission to an empty one
+				mission_write_failed = !resetMission();
+
+				if (!mission_write_failed) {
+					mavlink_log_warning(_navigator->get_mavlink_log_pub(), "Invalid Mission: mission has been cleared\t");
+					events::send(events::ID("new_mission_cleared"), events::Log::Warning,
+						     "Invalid Mission: mission has been cleared");
+				}
+
+				_navigator->get_mission_result()->valid = false;
 			}
 
 			if (mission_write_failed) {
+				// Revert to the failed new mission since we could not change to old one nor reset it
 				_mission = new_mission;
+				PX4_ERR("Could not update invalid mission");
 
 			} else {
-				// Publish potentially updated mission state
-				_mission.timestamp = hrt_absolute_time();
-				_mission_pub.publish(_mission);
+				_navigator->get_mission_result()->mission_id = _mission.mission_id;
+				_navigator->get_mission_result()->seq_total = _mission.count;
+				_navigator->get_mission_result()->seq_reached = -1;
+				_navigator->get_mission_result()->failure = false;
+				set_mission_result();
 
-				// Notify user
-				mavlink_log_warning(_navigator->get_mavlink_log_pub(), "Invalid Mission: Previous mission has been restored\t");
-				events::send(events::ID("old_mission_restored"), events::Log::Warning,
-					     "Invalid Mission: Previous mission has been restored");
 			}
 		}
 	}
@@ -1273,11 +1277,11 @@ int MissionBase::setMissionToClosestItem(double lat, double lon, float alt, floa
 	return PX4_OK;
 }
 
-void MissionBase::resetMission()
+bool MissionBase::resetMission()
 {
 	/* we do not need to reset mission if is already.*/
 	if (_mission.count == 0u) {
-		return;
+		return true;
 	}
 
 	/* Set a new mission*/
@@ -1300,6 +1304,8 @@ void MissionBase::resetMission()
 	} else {
 		PX4_ERR("Mission Initialization failed.");
 	}
+
+	return success;
 }
 
 void MissionBase::resetMissionJumpCounter()

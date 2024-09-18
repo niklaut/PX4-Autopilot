@@ -190,8 +190,9 @@ protected:
 	/**
 	 * @brief Reset Mission
 	 *
+	 * @return true if the mission could be successfully reset
 	 */
-	void resetMission();
+	bool resetMission();
 	/**
 	 * @brief Reset Mission Jump Counter of Mission Jump Items
 	 *
