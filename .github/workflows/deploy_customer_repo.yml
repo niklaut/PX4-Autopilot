@@ -8,37 +8,10 @@ on:
 
 
 jobs:
-  references:
-    name: Build and deploy Nuttx targets for the release
-    runs-on: ubuntu-latest
-    container: px4io/px4-dev-nuttx-focal:2021-09-08
-    outputs:
-      release: ${{ steps.references.outputs.release }}
-      tag: ${{ steps.references.outputs.tag_branch }}
-      valid_tag: ${{ steps.references.outputs.valid_tag }}
-    env:
-      TAG_NAME: ${{ github.event.release.tag_name }}
-    steps:
-      - name: Set initial references
-        id: references
-        run: |
-          TAG_BRANCH=$(echo $GITHUB_REF | sed -e 's#refs/tags/##g')
-          REF_BRANCH=$(git branch -a --contains tags/$TAG_BRANCH | grep release | sed "s/.*\(release\/.*\).*/\1/p" | head -n 1)
-          VALID_RELEASE="v([0-9]+)\.([0-9]+)\.([0-9]+)-([0-9]+)\.([0-9]+)\.([0-9]+)?$"
-          RELEASE=$(echo $REF_BRANCH | sed -r 's/release\///')
-          echo "valid_tag=${VALID_RELEASE}" >> $GITHUB_OUTPUT
-          echo "ref_branch=${REF_BRANCH}" >> $GITHUB_OUTPUT
-          echo "tag_branch=${TAG_BRANCH}" >> $GITHUB_OUTPUT
-          echo "release=${RELEASE}" >> $GITHUB_OUTPUT
-          echo "timestamp=$(date)" >> $GITHUB_OUTPUT
-
-          # Remove v from tag name, if present
-          echo "TAG_NAME=${TAG_NAME#*v}" >> $GITHUB_ENV
   deploy-release-branches:
-    name: Create v${{ needs.references.outputs.release }} release branch in customer repos
+    name: Create release branch in customer repos
     runs-on: ubuntu-latest
     container: px4io/px4-dev-nuttx-focal:2021-09-08
-    needs: references
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: checkout
@@ -47,20 +20,32 @@ jobs:
           token: ${{ secrets.AUTERION_CI_ACCESS_TOKEN }}
           ref: ${{ github.event.workflow_run.head_branch }}
           submodules: 'recursive'
+
+      - name: Set initial references
+        id: references
+        run: |
+          TAG_BRANCH=$(echo $GITHUB_REF | sed -e 's#refs/tags/##g')
+          REF_BRANCH=$(git branch -a --contains tags/$TAG_BRANCH | grep release | sed "s/.*\(release\/.*\).*/\1/p" | head -n 1)
+          VALID_RELEASE="v([0-9]+)\.([0-9]+)\.([0-9]+)-([0-9]+)\.([0-9]+)\.([0-9]+)?$"
+          RELEASE=$(echo $REF_BRANCH | sed -r 's/release\///')
+          echo "valid_tag=${VALID_RELEASE}" >> $GITHUB_OUTPUT
+          echo "tag_branch=${TAG_BRANCH}" >> $GITHUB_OUTPUT
+          echo "release=${RELEASE}" >> $GITHUB_OUTPUT
+
       - name: Push release branch to customers repos
         shell: bash
         env:
           CUSTOM_LIST: ${{ secrets.CUSTOM_LIST }}
         run: |
           # Only push if it is a final release
-          if [[ "${{ needs.release.outputs.tag }}" =~ ${{ needs.references.outputs.valid_tag }} ]]; then
+          if [[ "${{ steps.references.outputs.tag_branch }}" =~ ${{ steps.references.outputs.valid_tag }} ]]; then
             printf $CUSTOM_LIST > tmp_list
             perl -0pe 's/,/\n/g' tmp_list > list
             while read url; do
               remote=$(echo $url | awk -F'/' ' { print $NF } ')
               git remote add $remote $url
-              git push -u $remote HEAD:refs/tags/${{ needs.release.outputs.tag }}
-              git push -u $remote HEAD:refs/heads/auterion/v${{ needs.release.outputs.release }}
+              git push -u $remote HEAD:refs/tags/${{ steps.references.outputs.tag }}
+              git push -u $remote HEAD:refs/heads/auterion/v${{ steps.references.outputs.release }}
               git remote remove $remote
             done < list
           fi
