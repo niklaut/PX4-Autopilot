@@ -19,13 +19,11 @@ jobs:
    name: Build and deploy Nuttx targets for the release
    runs-on: ubuntu-latest
    container: px4io/px4-dev-nuttx-focal:2021-09-08
-   outputs:
-     release: ${{ steps.references.outputs.release }}
-     tag: ${{ steps.references.outputs.tag_branch }}
-     valid_tag: ${{ steps.references.outputs.valid_tag }}
-   env:
-     TAG_NAME: ${{ github.event.release.tag_name }}
    steps:
+    - name: Set environmental variables
+      run: |
+        echo TAG_NAME=$( echo ${{ github.event.release.tag_name }} | sed 's/^v//' ) >> $GITHUB_ENV
+        echo TIMESTAMP=$( date )  >> $GITHUB_ENV
     - uses: actions/checkout@v1
     - name: Disable the keychain credential helper
       run: git config --global credential.helper ""
@@ -214,22 +212,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
-    - name: Set initial references
-      id: references
-      run: |
-        TAG_BRANCH=$(echo $GITHUB_REF | sed -e 's#refs/tags/##g')
-        REF_BRANCH=$(git branch -a --contains tags/$TAG_BRANCH | grep release | sed "s/.*\(release\/.*\).*/\1/p" | head -n 1)
-        VALID_RELEASE="v([0-9]+)\.([0-9]+)\.([0-9]+)-([0-9]+)\.([0-9]+)\.([0-9]+)?$"
-        RELEASE=$(echo $REF_BRANCH | sed -r 's/release\///')
-        echo "valid_tag=${VALID_RELEASE}" >> $GITHUB_OUTPUT
-        echo "ref_branch=${REF_BRANCH}" >> $GITHUB_OUTPUT
-        echo "tag_branch=${TAG_BRANCH}" >> $GITHUB_OUTPUT
-        echo "release=${RELEASE}" >> $GITHUB_OUTPUT
-        echo "timestamp=$(date)" >> $GITHUB_OUTPUT
-
-        # Remove v from tag name, if present
-        echo "TAG_NAME=${TAG_NAME#*v}" >> $GITHUB_ENV
-
     - name: Clone AuterionOS
       uses: actions/checkout@v4
       with:
@@ -247,12 +229,12 @@ jobs:
       with:
         token: ${{ secrets.AUTERION_CI_ACCESS_TOKEN }}
         path: AuterionOS
-        title: "Release ${{ env.TAG_NAME }} FMU binaries update | ${{ steps.references.outputs.timestamp }}"
-        body: "Updates FMU binaries for release ${{ env.TAG_NAME }}, created on ${{ steps.references.outputs.timestamp }}."
+        title: "Release ${{ env.TAG_NAME }} FMU binaries update | ${{ env.TIMESTAMP }}"
+        body: "Updates FMU binaries for release ${{ env.TAG_NAME }}, created on ${{ env.TIMESTAMP }}."
         team-reviewers: ${{env.AUTERIONOS_TEAM_REVIEWER}}
         commit-message: "chore: update fmu binaries for release ${{ env.TAG_NAME }}"
         author: auterion-ci <ci@auterion.com>
         committer: auterion-ci <ci@auterion.com>
         assignees: auterion-ci
         base: ${{env.AUTERIONOS_BASE_BRANCH}}
-        branch: pr-update_fmu_binaries_release_${{ steps.references.outputs.release }}
+        branch: pr-update_fmu_binaries_release_${{ env.TAG_NAME }}
