@@ -22,7 +22,7 @@ jobs:
    steps:
     - name: Set environmental variables
       run: |
-        echo TAG_NAME=$( echo ${{ github.event.release.tag_name }} | sed 's/^v//' ) >> $GITHUB_ENV
+        echo TAG_NAME=$( echo ${{ github.event.release.tag_name }} | sed -E 's/^(ext\/oem-)?v?//g' ) >> $GITHUB_ENV
         echo TIMESTAMP=$( date )  >> $GITHUB_ENV
     - name: check prefix
       if: ${{ github.repository != 'Auterion/PX4_firmware_private' && env.PX4_TARGET_NAME_PREFIX == '' }}
