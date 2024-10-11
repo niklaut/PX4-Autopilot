@@ -202,7 +202,7 @@ jobs:
       run: |
         for i in $(seq 10); do \
         echo "Attempt $i..."
-        gh release upload --clobber ${{ env.TAG_NAME }} development-nuttx-targets.zip \
+        gh release upload --clobber ${{ github.event.release.tag_name }} development-nuttx-targets.zip \
         && s=0 && break || s=$? && sleep 15; done; (exit $s)
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -211,7 +211,7 @@ jobs:
       run: |
         for i in $(seq 10); do \
         echo "Attempt $i..."
-        gh release upload --clobber ${{ env.TAG_NAME }} production-nuttx-targets.zip \
+        gh release upload --clobber ${{ github.event.release.tag_name }} production-nuttx-targets.zip \
         && s=0 && break || s=$? && sleep 15; done; (exit $s)
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
