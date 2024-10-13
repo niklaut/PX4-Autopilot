@@ -19,12 +19,13 @@ jobs:
         with:
           token: ${{ secrets.AUTERION_CI_ACCESS_TOKEN }}
           ref: ${{ github.event.workflow_run.head_branch }}
+          fetch-depth: 0
           submodules: 'recursive'
 
       - name: Set initial references
         id: references
         run: |
-          TAG_BRANCH=$(echo $GITHUB_REF | sed -e 's#refs/tags/##g')
+          TAG_BRANCH=${{ github.event.workflow_run.head_branch }}
           REF_BRANCH=$(git branch -a --contains tags/$TAG_BRANCH | grep release | sed "s/.*\(release\/.*\).*/\1/p" | head -n 1)
           VALID_RELEASE="v([0-9]+)\.([0-9]+)\.([0-9]+)-([0-9]+)\.([0-9]+)\.([0-9]+)?$"
           RELEASE=$(echo $REF_BRANCH | sed -r 's/release\///')
