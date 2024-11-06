@@ -119,7 +119,7 @@ jobs:
         env:
           PX4_RESTRICTED_BUILD: 1
         run: |
-            ./Tools/ci_build_all_runner.sh ${{matrix.targets}}
+            ./Tools/ci/build_all_runner.sh ${{matrix.targets}}
 
       - name: Arrange Build Artifacts
         run: |
