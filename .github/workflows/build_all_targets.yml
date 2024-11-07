@@ -134,34 +134,35 @@ jobs:
       - name: Cache Save
         run: ccache -s
 
-  artifacts:
-    name: Upload Artifacts to S3
-    # runs-on: ubuntu-latest
-    runs-on: [runs-on,runner=1cpu-linux-x64,image=ubuntu22-full-x64,"run-id=${{ github.run_id }}"]
-    needs: [setup, group_targets]
-    if: contains(fromJSON('["main", "stable", "beta"]'), needs.group_targets.outputs.branchname)
-    steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts/
-          merge-multiple: true
+  # APX4 custom: disable uploading artifacts to S3
+  # artifacts:
+  #   name: Upload Artifacts to S3
+  #   # runs-on: ubuntu-latest
+  #   runs-on: [runs-on,runner=1cpu-linux-x64,image=ubuntu22-full-x64,"run-id=${{ github.run_id }}"]
+  #   needs: [setup, group_targets]
+  #   if: contains(fromJSON('["main", "stable", "beta"]'), needs.group_targets.outputs.branchname)
+  #   steps:
+  #     - name: Download Artifacts
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         path: artifacts/
+  #         merge-multiple: true
 
-      - name: Branch Name
-        run: |
-          echo "${{ needs.group_targets.outputs.branchname }}"
+  #     - name: Branch Name
+  #       run: |
+  #         echo "${{ needs.group_targets.outputs.branchname }}"
 
-      - name: Uploading Artifacts to S3 [${{ needs.group_targets.outputs.branchname == 'main' && 'master' || needs.group_targets.outputs.branchname }}]
-        uses: jakejarvis/s3-sync-action@master
-        with:
-          args: --acl public-read
-        env:
-          AWS_S3_BUCKET: 'px4-travis'
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: 'us-west-1'
-          SOURCE_DIR: artifacts/
-          DEST_DIR: Firmware/${{ needs.group_targets.outputs.branchname == 'main' && 'master' || needs.group_targets.outputs.branchname }}/
+  #     - name: Uploading Artifacts to S3 [${{ needs.group_targets.outputs.branchname == 'main' && 'master' || needs.group_targets.outputs.branchname }}]
+  #       uses: jakejarvis/s3-sync-action@master
+  #       with:
+  #         args: --acl public-read
+  #       env:
+  #         AWS_S3_BUCKET: 'px4-travis'
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_REGION: 'us-west-1'
+  #         SOURCE_DIR: artifacts/
+  #         DEST_DIR: Firmware/${{ needs.group_targets.outputs.branchname == 'main' && 'master' || needs.group_targets.outputs.branchname }}/
 
   release:
     name: Create Release and Upload Artifacts
