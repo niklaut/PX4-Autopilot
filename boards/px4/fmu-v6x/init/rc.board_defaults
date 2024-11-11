@@ -8,6 +8,8 @@
 param set-default SENS_EN_INA238 0
 param set-default SENS_EN_INA228 0
 param set-default SENS_EN_INA226 0
+# Probe for LW20/c by default
+param set-default SENS_EN_SF1XX 6
 
 if ver hwbasecmp 009 010 011
 then
@@ -15,6 +17,9 @@ then
 	param set-default UXRCE_DDS_PTCFG 2
 	param set-default UXRCE_DDS_AG_IP 170461697
 	param set-default UXRCE_DDS_CFG 1000
+
+	# Update default IP config if needed
+	netman update_default -i eth0
 else
 	# Mavlink ethernet (CFG 1000)
 	param set-default MAV_2_CONFIG 1000

@@ -48,6 +48,7 @@
 #include "checks/distanceSensorChecks.hpp"
 #include "checks/escCheck.hpp"
 #include "checks/estimatorCheck.hpp"
+#include "checks/externalUpdateCheck.hpp"
 #include "checks/failureDetectorCheck.hpp"
 #include "checks/navigatorCheck.hpp"
 #include "checks/gyroCheck.hpp"
@@ -130,6 +131,7 @@ private:
 	DistanceSensorChecks _distance_sensor_checks;
 	EscChecks _esc_checks;
 	EstimatorChecks _estimator_checks;
+	ExternalUpdateChecks _external_update_checks;
 	FailureDetectorChecks _failure_detector_checks;
 	NavigatorChecks _navigator_checks;
 	GyroChecks _gyro_checks;
@@ -169,6 +171,7 @@ private:
 		&_distance_sensor_checks,
 		&_esc_checks,
 		&_estimator_checks,
+		&_external_update_checks,
 		&_failure_detector_checks,
 		&_navigator_checks,
 		&_gyro_checks,

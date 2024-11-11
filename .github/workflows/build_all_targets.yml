@@ -12,22 +12,24 @@ on:
         required: true
         description: release version
   push:
-    tags:
-      - 'v*'
     branches:
       - 'main'
+      - 'develop'
       - 'stable'
       - 'beta'
       - 'release/**'
   pull_request:
     branches:
-      - '*'
+      - '**'
+
+env:
+  AUTERION_BOARDS: 'px4_fmu-v5x,px4_fmu-v6x'
 
 jobs:
   group_targets:
     name: Scan for Board Targets
-    # runs-on: ubuntu-latest
-    runs-on: [runs-on,runner=1cpu-linux-x64,image=ubuntu22-full-x64,"run-id=${{ github.run_id }}"]
+    runs-on: ubuntu-latest
+    # runs-on: [runs-on,runner=1cpu-linux-x64,image=ubuntu22-full-x64,"run-id=${{ github.run_id }}"]
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       timestamp: ${{ steps.set-timestamp.outputs.timestamp }}
@@ -35,6 +37,8 @@ jobs:
       branchname: ${{ steps.set-branch.outputs.branchname }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.AUTERION_CI_ACCESS_TOKEN }}
 
       - name: Install Python Dependencies
         uses: py-actions/py-dependency-install@v4
@@ -42,7 +46,7 @@ jobs:
           path: "./Tools/setup/requirements.txt"
 
       - id: set-matrix
-        run: echo "::set-output name=matrix::$(./Tools/ci/generate_board_targets_json.py --group)"
+        run: echo "::set-output name=matrix::$(./Tools/ci/generate_board_targets_json.py --groups --filter ${{env.AUTERION_BOARDS}})"
 
       - id: set-timestamp
         run: echo "::set-output name=timestamp::$(date +"%Y%m%d%H%M%S")"
@@ -70,8 +74,8 @@ jobs:
 
   setup:
     name: Build Group [${{ matrix.group }}]
-    # runs-on: ubuntu-latest
-    runs-on: [runs-on,runner=8cpu-linux-x64,image=ubuntu22-full-x64,"run-id=${{ github.run_id }}"]
+    runs-on: ubuntu-latest
+    # runs-on: [runs-on,runner=8cpu-linux-x64,image=ubuntu22-full-x64,"run-id=${{ github.run_id }}"]
     needs: group_targets
     strategy:
       matrix: ${{ fromJson(needs.group_targets.outputs.matrix) }}
@@ -82,6 +86,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.AUTERION_CI_ACCESS_TOKEN }}
+          submodules: recursive
 
       - name: Git ownership workaround
         run: git config --system --add safe.directory '*'
@@ -108,6 +114,12 @@ jobs:
         run: |
             ./Tools/ci/build_all_runner.sh ${{matrix.targets}}
 
+      - name: make production builds
+        env:
+          PX4_RESTRICTED_BUILD: 1
+        run: |
+            ./Tools/ci/build_all_runner.sh ${{matrix.targets}}
+
       - name: Arrange Build Artifacts
         run: |
           ./Tools/ci/package_build_artifacts.sh
@@ -121,54 +133,55 @@ jobs:
       - name: Cache Save
         run: ccache -s
 
-  artifacts:
-    name: Upload Artifacts to S3
-    # runs-on: ubuntu-latest
-    runs-on: [runs-on,runner=1cpu-linux-x64,image=ubuntu22-full-x64,"run-id=${{ github.run_id }}"]
-    needs: [setup, group_targets]
-    if: contains(fromJSON('["main", "stable", "beta"]'), needs.group_targets.outputs.branchname)
-    steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts/
-          merge-multiple: true
+  # APX4 custom: disable uploading artifacts to S3
+  # artifacts:
+  #   name: Upload Artifacts to S3
+  #   # runs-on: ubuntu-latest
+  #   runs-on: [runs-on,runner=1cpu-linux-x64,image=ubuntu22-full-x64,"run-id=${{ github.run_id }}"]
+  #   needs: [setup, group_targets]
+  #   if: contains(fromJSON('["main", "stable", "beta"]'), needs.group_targets.outputs.branchname)
+  #   steps:
+  #     - name: Download Artifacts
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         path: artifacts/
+  #         merge-multiple: true
 
-      - name: Branch Name
-        run: |
-          echo "${{ needs.group_targets.outputs.branchname }}"
+  #     - name: Branch Name
+  #       run: |
+  #         echo "${{ needs.group_targets.outputs.branchname }}"
 
-      - name: Uploading Artifacts to S3 [${{ needs.group_targets.outputs.branchname == 'main' && 'master' || needs.group_targets.outputs.branchname }}]
-        uses: jakejarvis/s3-sync-action@master
-        with:
-          args: --acl public-read
-        env:
-          AWS_S3_BUCKET: 'px4-travis'
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: 'us-west-1'
-          SOURCE_DIR: artifacts/
-          DEST_DIR: Firmware/${{ needs.group_targets.outputs.branchname == 'main' && 'master' || needs.group_targets.outputs.branchname }}/
+  #     - name: Uploading Artifacts to S3 [${{ needs.group_targets.outputs.branchname == 'main' && 'master' || needs.group_targets.outputs.branchname }}]
+  #       uses: jakejarvis/s3-sync-action@master
+  #       with:
+  #         args: --acl public-read
+  #       env:
+  #         AWS_S3_BUCKET: 'px4-travis'
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_REGION: 'us-west-1'
+  #         SOURCE_DIR: artifacts/
+  #         DEST_DIR: Firmware/${{ needs.group_targets.outputs.branchname == 'main' && 'master' || needs.group_targets.outputs.branchname }}/
 
-  release:
-    name: Create Release and Upload Artifacts
-    # runs-on: ubuntu-latest
-    runs-on: [runs-on,runner=1cpu-linux-x64,image=ubuntu22-full-x64,"run-id=${{ github.run_id }}"]
-    needs: [setup, group_targets]
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
+  #release:
+  #  name: Create Release and Upload Artifacts
+  #  # runs-on: ubuntu-latest
+  #  runs-on: [runs-on,runner=1cpu-linux-x64,image=ubuntu22-full-x64,"run-id=${{ github.run_id }}"]
+  #  needs: [setup, group_targets]
+  #  if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+  #  steps:
+  #    - name: Download Artifacts
+  #      uses: actions/download-artifact@v4
 
-      - name: Arrange Binaries
-        run: |
-          mkdir artifacts
-          cp **/**/*.px4 artifacts/
+  #    - name: Arrange Binaries
+  #      run: |
+  #        mkdir artifacts
+  #        cp **/**/*.px4 artifacts/
 
-      - name: Upload Binaries to Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: ${{ needs.group_targets.outputs.tagname }}
-          tag_name: ${{ needs.group_targets.outputs.tagname }}
-          draft: true
-          files: artifacts/*.px4
+  #    - name: Upload Binaries to Release
+  #      uses: softprops/action-gh-release@v2
+  #      with:
+  #        name: ${{ needs.group_targets.outputs.tagname }}
+  #        tag_name: ${{ needs.group_targets.outputs.tagname }}
+  #        draft: true
+  #        files: artifacts/*.px4

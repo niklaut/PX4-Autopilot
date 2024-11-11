@@ -2155,7 +2155,7 @@ MavlinkReceiver::handle_message_manual_control(mavlink_message_t *msg)
 	manual_control_setpoint.throttle = ((mavlink_manual_control.z / 1000.f) * 2.f) - 1.f;
 	manual_control_setpoint.yaw = mavlink_manual_control.r / 1000.f;
 	// Pass along the button states
-	manual_control_setpoint.buttons = mavlink_manual_control.buttons;
+	// manual_control_setpoint.buttons = mavlink_manual_control.buttons;
 
 	if (mavlink_manual_control.enabled_extensions & (1u << 2)) { manual_control_setpoint.aux1 = mavlink_manual_control.aux1 / 1000.0f; }
 
@@ -2948,6 +2948,19 @@ void MavlinkReceiver::handle_message_generator_status(mavlink_message_t *msg)
 
 void MavlinkReceiver::handle_message_statustext(mavlink_message_t *msg)
 {
+	if (msg->sysid == 255) { // GCS, only for pilot login message
+		mavlink_statustext_t statustext;
+		mavlink_msg_statustext_decode(msg, &statustext);
+
+		log_message_s log_msg;
+		log_msg.timestamp = hrt_absolute_time();
+		log_msg.severity = statustext.severity;
+		memcpy(log_msg.text, statustext.text, math::min(sizeof(log_msg.text), sizeof(statustext.text)));
+		log_msg.text[sizeof(log_msg.text) - 1] = '\0';
+
+		_log_message_incoming_pub.publish(log_msg);
+	}
+
 	if (msg->sysid == mavlink_system.sysid) {
 		// log message from the same system
 
