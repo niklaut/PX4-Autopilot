@@ -5,8 +5,8 @@ on:
     types: [created]
 
 env:
-  PX4_DEV_TARGETS: 'px4_fmu-v5x_default:px4_fmu-v6x_default:px4_fmu-v5x_recovery:px4_fmu-v6x_recovery:px4_fmu-v6x_bootloader'
-  PX4_PROD_TARGETS: 'px4_fmu-v5x_default:px4_fmu-v6x_default'
+  PX4_DEV_TARGETS: 'px4_fmu-v5x_default:px4_fmu-v6x_default:px4_fmu-v6s_default:px4_fmu-v5x_recovery:px4_fmu-v6x_recovery:px4_fmu-v6s_recovery:px4_fmu-v6x_bootloader:px4_fmu-v6s_bootloader'
+  PX4_PROD_TARGETS: 'px4_fmu-v5x_default:px4_fmu-v6x_default:px4_fmu-v6s_default'
   DEV_BUILD_FLAGS: ''
   PROD_BUILD_FLAGS: 'PX4_RESTRICTED_BUILD=1'
   PX4_TARGET_NAME_PREFIX: ''
