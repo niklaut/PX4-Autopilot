@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+# Forward is where the MIPI and ESC connectors are
+#
+# PX4 FMUv6S specific board sensors init
+#------------------------------------------------------------------------------
+
+# For system_power and battery_status
+board_adc start
+
+# !!! NOT POPULATED !!!
+# IMU1 on SPI1, ROTATION_YAW_270=6
+# icm20602 -R 6 -s start
+
+# !!! NOT POPULATED !!!
+# IMU2 on SPI2, ROTATION_YAW_90=2
+# icm42688p -R 2 -s start
+
+# IMU3 on SPI3, ROTATION_NONE=0
+bmi088 -A -R 0 -s start
+bmi088 -G -R 0 -s start
+
+# Only needed if all three IMUs are populated
+# param set-default CAL_ACC2_PRIO 75
+# param set-default CAL_GYRO2_PRIO 75
+
+# MAG on I2C4, ROTATION_ROLL_180=8
+bmm150 -I -R 8 start
+
+# BARO on I2C4
+bmp388 -I -b 4 -a 0x77 start
