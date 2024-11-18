@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2020 PX4 Development Team. All rights reserved.
+ *   Copyright (C) 2021 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,54 +31,9 @@
  *
  ****************************************************************************/
 
-#ifndef COLLISION_HPP
-#define COLLISION_HPP
+#include <px4_arch/i2c_hw_description.h>
 
-#include <uORB/topics/collision_report.h>
-
-class MavlinkStreamCollision : public MavlinkStream
-{
-public:
-	static MavlinkStream *new_instance(Mavlink *mavlink) { return new MavlinkStreamCollision(mavlink); }
-
-	static constexpr const char *get_name_static() { return "COLLISION"; }
-	static constexpr uint16_t get_id_static() { return MAVLINK_MSG_ID_COLLISION; }
-
-	const char *get_name() const override { return get_name_static(); }
-	uint16_t get_id() override { return get_id_static(); }
-
-	unsigned get_size() override
-	{
-		return _collision_sub.advertised() ? MAVLINK_MSG_ID_COLLISION_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES : 0;
-	}
-
-private:
-	explicit MavlinkStreamCollision(Mavlink *mavlink) : MavlinkStream(mavlink) {}
-
-	uORB::Subscription _collision_sub{ORB_ID(collision_report)};
-
-	bool send() override
-	{
-		collision_report_s report;
-		bool sent = false;
-
-		while ((_mavlink->get_free_tx_buf() >= get_size()) && _collision_sub.update(&report)) {
-			mavlink_collision_t msg = {};
-
-			msg.src = report.src;
-			msg.id = report.id;
-			msg.action = report.action;
-			msg.threat_level = report.threat_level;
-			msg.time_to_minimum_delta = report.time_to_minimum_delta;
-			msg.altitude_minimum_delta = report.altitude_minimum_delta;
-			msg.horizontal_minimum_delta = report.horizontal_minimum_delta;
-
-			mavlink_msg_collision_send_struct(_mavlink->get_channel(), &msg);
-			sent = true;
-		}
-
-		return sent;
-	}
+constexpr px4_i2c_bus_t px4_i2c_buses[I2C_BUS_MAX_BUS_ITEMS] = {
+	initI2CBusExternal(1),
+	initI2CBusInternal(2),
 };
-
-#endif // COLLISION_HPP
